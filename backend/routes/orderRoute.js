@@ -1,31 +1,23 @@
 import express from "express";
 import {
   placeOrder,
-  placeOrderStripe,
-  placeOrderRazorpay,
   allOrders,
   userOrders,
-  updateStatus,
-  verifyStripe,
+  updateStatus
 } from "../controllers/orderController.js";
 import adminAuth from "../middelware/adminAuth.js";
 import authUser from "../middelware/auth.js";
 
 const orderRouter = express.Router();
 
-//Admin Features
+// Admin Features
 orderRouter.post("/list", adminAuth, allOrders);
 orderRouter.post("/status", adminAuth, updateStatus);
 
-//Payment Features
+// Payment Features (COD only)
 orderRouter.post("/place", authUser, placeOrder);
-orderRouter.post("/stripe", authUser, placeOrderStripe);
-orderRouter.post("/razorpay", authUser, placeOrderRazorpay);
 
-//User Feature
+// User Features
 orderRouter.post("/userorders", authUser, userOrders);
-
-//verify payment(Stripe)
-orderRouter.post("/verifyStripe", authUser, verifyStripe);
 
 export default orderRouter;
