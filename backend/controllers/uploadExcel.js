@@ -4,13 +4,18 @@ import fs from "fs";
 import XLSX from "xlsx";
 import productModel from "../models/productModel.js";
 
-// ✅ Ensure folder exists
-const uploadPath = path.resolve("sample_excel_file");
+// Determine the correct upload folder based on environment
+// In production (e.g. Vercel), use /tmp because the bundle is read-only
+const isProduction = process.env.NODE_ENV === "production";
+const folderName = isProduction ? "/tmp/sample_excel_file" : "sample_excel_file";
+const uploadPath = path.resolve(folderName);
+
+// ✅ Ensure the folder exists (creates /tmp/sample_excel_file in production)
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// ✅ Multer setup to save Excel file with original name
+// ✅ Multer setup to save Excel file with its original name
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadPath);
@@ -31,13 +36,11 @@ export const uploadExcelFile = (req, res) => {
         .status(500)
         .json({ success: false, message: "Upload failed", error: err.message });
     }
-
     if (!req.file) {
       return res
         .status(400)
         .json({ success: false, message: "No file uploaded" });
     }
-
     return res.json({
       success: true,
       message: "Excel file uploaded successfully",
@@ -46,7 +49,7 @@ export const uploadExcelFile = (req, res) => {
   });
 };
 
-// ✅ Route 2: Read & insert Excel into MongoDB
+// ✅ Route 2: Read & insert Excel data into MongoDB
 export const uploadExcelProducts = async (req, res) => {
   try {
     if (!req.file) {
@@ -101,7 +104,7 @@ export const uploadExcelProducts = async (req, res) => {
     }));
 
     await productModel.insertMany(formattedData);
-    fs.unlinkSync(filePath); // Optional: remove file after upload
+    fs.unlinkSync(filePath); // Optional: remove file after processing
 
     res.json({
       success: true,
